@@ -10,7 +10,8 @@
     padding: 0;
 }
 
-html, body {
+html {
+    zoom: 1.1;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -27,6 +28,9 @@ body {
     padding: 3px;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
 
 /* Outer Window Frame - Fixed to Viewport */
