@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenLog Enterprise ERP System - Tree Plantation Drive Tracker</title>
+    <link rel="icon" type="image/png" href="icons8-fruit-48.png">
+    <link rel="stylesheet" href="css/erp-theme.css">
+</head>
+<body>
+
+<div class="erp-window">
+
+    <!-- 1. Top Application Title Bar with Avocado Logo -->
+    <div class="erp-title-bar">
+        <div class="erp-title-bar-left">
+            <img src="icons8-fruit-48.png" alt="GreenLog" style="width: 17px; height: 17px; display: inline-block; vertical-align: middle; background: transparent;">
+            <span>GreenLog Enterprise ERP System</span>
+        </div>
+    </div>
+
+    <!-- 2. Menu Bar -->
+    <div class="erp-menu-bar">
+        <div class="erp-menu-item">
+            <u>F</u>ile
+            <div class="erp-menu-dropdown">
+                <div class="erp-dropdown-entry" onclick="openNewTreeModal()"><span>Log Plantation Entry...</span><small>Ctrl+N</small></div>
+                <div class="erp-dropdown-entry" onclick="openNewDriveModal()"><span>New Plantation Drive...</span></div>
+                <div class="erp-dropdown-entry" onclick="openNewVolunteerModal()"><span>Register Volunteer...</span></div>
+                <div class="erp-dropdown-separator"></div>
+                <div class="erp-dropdown-entry" onclick="window.location.reload()"><span>Exit Application</span><small>Alt+F4</small></div>
+            </div>
+        </div>
+        <div class="erp-menu-item">
+            <u>V</u>iew
+            <div class="erp-menu-dropdown">
+                <div class="erp-dropdown-entry" onclick="switchTab('drives-trees')"><span>Drives & Trees View</span></div>
+                <div class="erp-dropdown-entry" onclick="switchTab('checkins')"><span>Health Check-ins Due</span></div>
+                <div class="erp-dropdown-entry" onclick="switchTab('stats')"><span>Leaderboard & Stats</span></div>
+                <div class="erp-dropdown-separator"></div>
+                <div class="erp-dropdown-entry" onclick="refreshAllData()"><span>Refresh All Data</span><small>F5</small></div>
+            </div>
+        </div>
+        <div class="erp-menu-item">
+            <u>T</u>ools
+            <div class="erp-menu-dropdown">
+                <div class="erp-dropdown-entry" onclick="refreshMetrics()"><span>Recalculate Survival Rates</span></div>
+                <div class="erp-dropdown-entry" onclick="openSubmitCheckInModal()"><span>Quick Check-In Utility</span></div>
+                <div class="erp-dropdown-separator"></div>
+                <div class="erp-dropdown-entry" onclick="purgeAllDataFromUI()" style="color: #8B0000;"><span>Purge All Records...</span></div>
+            </div>
+        </div>
+        <div class="erp-menu-item">
+            <u>H</u>elp
+            <div class="erp-menu-dropdown">
+                <div class="erp-dropdown-entry" onclick="showAboutDialog()"><span>About GreenLog ERP...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Action Toolbar (Clean Text-Only Buttons) -->
+    <div class="erp-toolbar">
+        <button class="erp-btn erp-btn-primary" onclick="openNewTreeModal()">
+            <strong>Log Plantation</strong>
+        </button>
+        <button class="erp-btn" onclick="openSubmitCheckInModal()">
+            Record Check-In
+        </button>
+        <div class="erp-toolbar-sep"></div>
+        <button class="erp-btn" onclick="openNewDriveModal()">
+            New Drive
+        </button>
+        <button class="erp-btn" onclick="openNewVolunteerModal()">
+            New Volunteer
+        </button>
+        <div class="erp-toolbar-sep"></div>
+        <button class="erp-btn" onclick="refreshAllData()">
+            Refresh All
+        </button>
+        <div class="erp-toolbar-sep"></div>
+        <button class="erp-btn" style="color: #8B0000;" onclick="purgeAllDataFromUI()" title="Permanently delete all records from all 4 tables">
+            Purge Database
+        </button>
+    </div>
+
+    <!-- 4. KPI Row (Summary Cards) -->
+    <div class="erp-kpi-container">
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">TOTAL TREES PLANTED</div>
+            <div class="erp-kpi-value" id="kpi-total-trees">0</div>
+        </div>
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">ALIVE TREES</div>
+            <div class="erp-kpi-value good" id="kpi-alive-trees">0</div>
+        </div>
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">DEAD TREES</div>
+            <div class="erp-kpi-value alert" id="kpi-dead-trees">0</div>
+        </div>
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">OVERALL SURVIVAL RATE</div>
+            <div class="erp-kpi-value good" id="kpi-survival-rate">0.0%</div>
+        </div>
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">ACTIVE DRIVES</div>
+            <div class="erp-kpi-value" id="kpi-total-drives">0</div>
+        </div>
+        <div class="erp-kpi-card">
+            <div class="erp-kpi-label">VOLUNTEERS</div>
+            <div class="erp-kpi-value" id="kpi-total-volunteers">0</div>
+        </div>
+    </div>
+
+    <!-- 5. Navigation File-Folder Tabs -->
+    <div class="erp-tab-row">
+        <div class="erp-tab active" id="tab-btn-drives-trees" onclick="switchTab('drives-trees')">
+            Drives & Trees
+        </div>
+        <div class="erp-tab" id="tab-btn-checkins" onclick="switchTab('checkins')">
+            Health Check-ins <span class="erp-badge" id="badge-due-count">0</span>
+        </div>
+        <div class="erp-tab" id="tab-btn-stats" onclick="switchTab('stats')">
+            Leaderboard & Stats
+        </div>
+    </div>
+
+    <!-- 6. Main Tab Content Work Area -->
+    <div class="erp-content-pane">
+
+        <!-- Tab 1: Drives & Trees View -->
+        <div class="tab-pane active" id="tab-pane-drives-trees">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background-color: #E2DFD5; padding: 3px 6px; border: 1px solid #D4D0C8; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-weight: bold; color: #435E42;">[ Master Tree Records ]</span>
+                    <label style="font-size: 11px;">Filter by Drive:</label>
+                    <select class="erp-select" id="filter-drive-select" onchange="filterTreesByDrive()" style="font-size: 11px; min-width: 140px;">
+                        <option value="ALL">-- All Plantation Drives --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <button class="erp-btn erp-btn-primary" onclick="openNewTreeModal()">+ Log Tree Entry</button>
+                    <button class="erp-btn" onclick="openNewDriveModal()">+ Create Drive</button>
+                    <button class="erp-btn" onclick="loadTreesTable()">Refresh Table</button>
+                </div>
+            </div>
+
+            <div class="erp-table-container">
+                <table class="erp-table" id="trees-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Tree ID</th>
+                            <th>Species</th>
+                            <th>Plantation Drive</th>
+                            <th>Location (GPS)</th>
+                            <th>Date Planted</th>
+                            <th style="width: 80px;">Status</th>
+                            <th style="width: 150px; text-align: center;">Record Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trees-table-body">
+                        <tr><td colspan="7" style="text-align: center; color: #666; padding: 12px;">Loading trees...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 2: Health Check-ins Shell -->
+        <div class="tab-pane" id="tab-pane-checkins">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background-color: #E2DFD5; padding: 3px 6px; border: 1px solid #D4D0C8; flex-shrink: 0;">
+                <span style="font-weight: bold; color: #435E42;">[ Trees Due for Survival Check-In ]</span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="erp-btn" onclick="openSubmitCheckInModal()">+ Record Check-In</button>
+                    <button class="erp-btn" onclick="loadDueTreesTable()">Refresh Due List</button>
+                </div>
+            </div>
+            <div class="erp-table-container">
+                <table class="erp-table" id="due-trees-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Tree ID</th>
+                            <th>Species</th>
+                            <th>Plantation Drive</th>
+                            <th>Date Planted</th>
+                            <th style="width: 80px;">Current Status</th>
+                            <th style="width: 140px; text-align: center;">Check-In Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="due-trees-table-body">
+                        <tr><td colspan="6" style="text-align: center; color: #666; padding: 12px;">Loading check-in queue...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: Leaderboard & Stats Shell -->
+        <div class="tab-pane" id="tab-pane-stats">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background-color: #E2DFD5; padding: 3px 6px; border: 1px solid #D4D0C8; flex-shrink: 0;">
+                <span style="font-weight: bold; color: #435E42;">[ Performance Analytics & Survival Statistics ]</span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="erp-btn erp-btn-primary" onclick="openNewVolunteerModal()">+ Register Volunteer</button>
+                    <button class="erp-btn" onclick="loadStatsTables()">Refresh Statistics</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; height: 100%; min-height: 0; flex: 1;">
+                <div style="display: flex; flex-direction: column; min-height: 0;">
+                    <div style="font-weight: bold; color: #435E42; margin-bottom: 3px; flex-shrink: 0;">[ Volunteer Leaderboard ]</div>
+                    <div class="erp-table-container">
+                        <table class="erp-table" id="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45px;">Rank</th>
+                                    <th>Volunteer Name</th>
+                                    <th style="width: 90px; text-align: right;">Trees Planted</th>
+                                    <th style="width: 85px; text-align: center;">Operations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-table-body">
+                                <tr><td colspan="4" style="text-align: center; color: #666; padding: 12px;">Loading leaderboard...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px; min-height: 0;">
+                    <div style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                        <div style="font-weight: bold; color: #435E42; margin-bottom: 3px; flex-shrink: 0;">[ Survival Rate Per Drive ]</div>
+                        <div class="erp-table-container">
+                            <table class="erp-table" id="drive-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Drive Name</th>
+                                        <th style="width: 45px;">Total</th>
+                                        <th style="width: 45px;">Alive</th>
+                                        <th style="width: 45px;">Dead</th>
+                                        <th style="width: 65px;">Survival %</th>
+                                        <th style="width: 85px; text-align: center;">Operations</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drive-stats-table-body">
+                                    <tr><td colspan="6" style="text-align: center; color: #666;">Loading drive stats...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                        <div style="font-weight: bold; color: #435E42; margin-bottom: 3px; flex-shrink: 0;">[ Survival Rate Per Species ]</div>
+                        <div class="erp-table-container">
+                            <table class="erp-table" id="species-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Species</th>
+                                        <th style="width: 50px;">Total</th>
+                                        <th style="width: 50px;">Alive</th>
+                                        <th style="width: 50px;">Dead</th>
+                                        <th style="width: 80px;">Survival %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="species-stats-table-body">
+                                    <tr><td colspan="5" style="text-align: center; color: #666;">Loading species stats...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 7. Status Bar -->
+    <div class="erp-status-bar">
+        <div class="erp-status-panel" style="flex: 2;" id="status-message">System Ready.</div>
+        <div class="erp-status-panel" style="flex: 1;">Database: MariaDB [Connected]</div>
+        <div class="erp-status-panel" style="flex: 1;">Port: 8080 (REST Active)</div>
+        <div class="erp-status-panel" style="width: 140px; text-align: right;" id="clock-display">00:00:00</div>
+    </div>
+
+</div>
+
+<!-- ==================== DIALOG BOXES (MODALS) ==================== -->
+
+<!-- 1. Add / Log Plantation Entry Modal -->
+<div class="erp-modal-overlay" id="tree-modal">
+    <div class="erp-dialog">
+        <div class="erp-dialog-header">
+            <span id="tree-modal-title">Log New Plantation Entry</span>
+            <div class="erp-dialog-close-btn" onclick="closeModal('tree-modal')">X</div>
+        </div>
+        <div class="erp-dialog-body">
+            <form id="tree-form" onsubmit="handleTreeFormSubmit(event)">
+                <input type="hidden" id="tree-id">
+                
+                <div class="erp-form-group">
+                    <label for="tree-species">Species Name: *</label>
+                    <input type="text" id="tree-species" class="erp-input" required placeholder="e.g. Neem, Teak, Banyan, Oak">
+                </div>
+
+                <div class="erp-form-group">
+                    <label for="tree-location">Location (GPS Coordinates): *</label>
+                    <input type="text" id="tree-location" class="erp-input" required placeholder="e.g. 12.9716, 77.5946">
+                </div>
+
+                <div class="erp-form-group">
+                    <label for="tree-date">Date Planted: *</label>
+                    <input type="date" id="tree-date" class="erp-input" required>
+                </div>
+
+                <div class="erp-form-group">
+                    <label for="tree-drive-select">Plantation Drive:</label>
+                    <select id="tree-drive-select" class="erp-select">
+                        <option value="">-- None / General Plantation --</option>
+                    </select>
+                </div>
+
+                <div class="erp-form-group" id="group-tree-volunteer">
+                    <label>Planted By Volunteer (Optional):</label>
+                    <select id="tree-volunteer-select" class="erp-select" onchange="onVolunteerSelectChange()" style="margin-bottom: 3px;">
+                        <option value="">-- Select Existing Volunteer --</option>
+                    </select>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 10px; color: #555; white-space: nowrap;">Or New Planter:</span>
+                        <input type="text" id="tree-new-volunteer" class="erp-input" placeholder="Type new person's name here" oninput="onNewVolunteerInput()" style="flex: 1;">
+                    </div>
+                </div>
+
+                <div class="erp-form-group" id="group-tree-status" style="display: none;">
+                    <label for="tree-status-select">Status:</label>
+                    <select id="tree-status-select" class="erp-select">
+                        <option value="ALIVE">ALIVE</option>
+                        <option value="DEAD">DEAD</option>
+                    </select>
+                </div>
+
+                <div class="erp-dialog-footer">
+                    <button type="submit" class="erp-btn erp-btn-primary">OK</button>
+                    <button type="button" class="erp-btn" onclick="closeModal('tree-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Plantation Drive Modal (Create / Edit) -->
+<div class="erp-modal-overlay" id="drive-modal">
+    <div class="erp-dialog">
+        <div class="erp-dialog-header">
+            <span id="drive-modal-title">Create New Plantation Drive</span>
+            <div class="erp-dialog-close-btn" onclick="closeModal('drive-modal')">X</div>
+        </div>
+        <div class="erp-dialog-body">
+            <form id="drive-form" onsubmit="handleDriveFormSubmit(event)">
+                <input type="hidden" id="drive-id">
+                <div class="erp-form-group">
+                    <label for="drive-name">Drive Name: *</label>
+                    <input type="text" id="drive-name" class="erp-input" required placeholder="e.g. Green Valley Drive 2026">
+                </div>
+                <div class="erp-form-group">
+                    <label for="drive-location">Location: *</label>
+                    <input type="text" id="drive-location" class="erp-input" required placeholder="e.g. City Park, Sector 4">
+                </div>
+                <div class="erp-form-group">
+                    <label for="drive-date">Drive Date: *</label>
+                    <input type="date" id="drive-date" class="erp-input" required>
+                </div>
+                <div class="erp-dialog-footer">
+                    <button type="submit" class="erp-btn erp-btn-primary">OK</button>
+                    <button type="button" class="erp-btn" onclick="closeModal('drive-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Volunteer Modal (Register / Edit) -->
+<div class="erp-modal-overlay" id="volunteer-modal">
+    <div class="erp-dialog">
+        <div class="erp-dialog-header">
+            <span id="volunteer-modal-title">Register New Volunteer</span>
+            <div class="erp-dialog-close-btn" onclick="closeModal('volunteer-modal')">X</div>
+        </div>
+        <div class="erp-dialog-body">
+            <form id="volunteer-form" onsubmit="handleVolunteerFormSubmit(event)">
+                <input type="hidden" id="volunteer-id">
+                <div class="erp-form-group">
+                    <label for="volunteer-name">Volunteer Full Name: *</label>
+                    <input type="text" id="volunteer-name" class="erp-input" required placeholder="e.g. Sarah Jenkins">
+                </div>
+                <div class="erp-form-group">
+                    <label for="volunteer-trees">Trees Planted Count:</label>
+                    <input type="number" id="volunteer-trees" class="erp-input" min="0" value="0">
+                </div>
+                <div class="erp-dialog-footer">
+                    <button type="submit" class="erp-btn erp-btn-primary">OK</button>
+                    <button type="button" class="erp-btn" onclick="closeModal('volunteer-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Quick Check-In Submission Modal -->
+<div class="erp-modal-overlay" id="checkin-modal">
+    <div class="erp-dialog">
+        <div class="erp-dialog-header" id="checkin-modal-header">
+            <span id="checkin-modal-title">Submit Survival Health Check-In</span>
+            <div class="erp-dialog-close-btn" onclick="closeModal('checkin-modal')">X</div>
+        </div>
+        <div class="erp-dialog-body">
+            <form id="checkin-form" onsubmit="handleCheckInFormSubmit(event)">
+                <div class="erp-form-group">
+                    <label for="checkin-tree-id">Tree Target: *</label>
+                    <select id="checkin-tree-id" class="erp-select" required>
+                        <option value="">-- Select Tree to Check --</option>
+                    </select>
+                </div>
+                <div class="erp-form-group">
+                    <label for="checkin-status">Reported Health Status: *</label>
+                    <select id="checkin-status" class="erp-select" required>
+                        <option value="ALIVE">ALIVE (Healthy / Surviving)</option>
+                        <option value="DEAD">DEAD (Withered / Terminated)</option>
+                    </select>
+                </div>
+                <div class="erp-form-group">
+                    <label for="checkin-date">Check-In Date: *</label>
+                    <input type="date" id="checkin-date" class="erp-input" required>
+                </div>
+                <div class="erp-form-group">
+                    <label for="checkin-volunteer">Inspected By Volunteer:</label>
+                    <select id="checkin-volunteer" class="erp-select">
+                        <option value="">-- None / Automated --</option>
+                    </select>
+                </div>
+                <div class="erp-dialog-footer">
+                    <button type="submit" class="erp-btn erp-btn-primary">OK</button>
+                    <button type="button" class="erp-btn" onclick="closeModal('checkin-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Classic ERP Alert / Error Message Dialog -->
+<div class="erp-modal-overlay" id="alert-modal">
+    <div class="erp-dialog" style="max-width: 440px;">
+        <div class="erp-dialog-header" id="alert-modal-header">
+            <span id="alert-modal-title">System Alert</span>
+            <div class="erp-dialog-close-btn" onclick="closeAlertModal()">X</div>
+        </div>
+        <div class="erp-dialog-body" style="display: flex; gap: 10px; align-items: flex-start;">
+            <div id="alert-modal-icon" class="erp-dialog-icon">[ ! ]</div>
+            <div id="alert-modal-message" style="font-size: 11px; line-height: 1.4; color: #000; word-break: break-word; flex: 1;">Message content</div>
+        </div>
+        <div class="erp-dialog-footer">
+            <button class="erp-btn erp-btn-primary" onclick="closeAlertModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- 6. Classic ERP Confirmation Dialog Box (Replaces native browser popups) -->
+<div class="erp-modal-overlay" id="confirm-modal">
+    <div class="erp-dialog" style="max-width: 420px;">
+        <div class="erp-dialog-header" id="confirm-modal-header">
+            <span id="confirm-modal-title">Confirm Operation</span>
+            <div class="erp-dialog-close-btn" onclick="closeConfirmModal(false)">X</div>
+        </div>
+        <div class="erp-dialog-body" style="display: flex; gap: 10px; align-items: flex-start;">
+            <div id="confirm-modal-icon" class="erp-dialog-icon">[ ? ]</div>
+            <div id="confirm-modal-message" style="font-size: 11px; line-height: 1.4; color: #000; word-break: break-word; flex: 1;">
+                Are you sure you want to proceed with this operation?
+            </div>
+        </div>
+        <div class="erp-dialog-footer">
+            <button class="erp-btn erp-btn-primary" id="confirm-modal-ok-btn">OK</button>
+            <button class="erp-btn" onclick="closeConfirmModal(false)">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
