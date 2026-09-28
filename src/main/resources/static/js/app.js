@@ -879,6 +879,7 @@ async function loadStatsTables() {
             const stats = await statsRes.json();
             renderDriveStatsTable(stats.driveStats || []);
             renderSpeciesStatsTable(stats.speciesStats || []);
+        }
         updateStatus('Leaderboard and survival statistics updated.');
     } catch (err) {
         console.error('Error loading stats tables:', err);
