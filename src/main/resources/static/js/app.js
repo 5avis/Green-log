@@ -135,26 +135,29 @@ function showAboutDialog() {
 }
 
 // --- KPI Synchronization ---
+function updateKPIs(data) {
+    if (!data) return;
+    const elTotalTrees = document.getElementById('kpi-total-trees');
+    const elAlive = document.getElementById('kpi-alive-trees');
+    const elDead = document.getElementById('kpi-dead-trees');
+    const elSurvival = document.getElementById('kpi-survival-rate');
+    const elDrives = document.getElementById('kpi-total-drives');
+    const elVolunteers = document.getElementById('kpi-total-volunteers');
+
+    if (elTotalTrees) elTotalTrees.textContent = data.totalTrees ?? 0;
+    if (elAlive) elAlive.textContent = data.aliveTrees ?? 0;
+    if (elDead) elDead.textContent = data.deadTrees ?? 0;
+    if (elSurvival) elSurvival.textContent = `${(data.overallSurvivalRate ?? 0).toFixed(1)}%`;
+    if (elDrives) elDrives.textContent = data.totalDrives ?? 0;
+    if (elVolunteers) elVolunteers.textContent = data.totalVolunteers ?? 0;
+}
+
 async function refreshMetrics() {
     try {
         const res = await fetch(`${API_BASE}/stats`);
         if (!res.ok) throw new Error('Failed to fetch KPI metrics');
         const data = await res.json();
-
-        const elTotalTrees = document.getElementById('kpi-total-trees');
-        const elAlive = document.getElementById('kpi-alive-trees');
-        const elDead = document.getElementById('kpi-dead-trees');
-        const elSurvival = document.getElementById('kpi-survival-rate');
-        const elDrives = document.getElementById('kpi-total-drives');
-        const elVolunteers = document.getElementById('kpi-total-volunteers');
-
-        if (elTotalTrees) elTotalTrees.textContent = data.totalTrees ?? 0;
-        if (elAlive) elAlive.textContent = data.aliveTrees ?? 0;
-        if (elDead) elDead.textContent = data.deadTrees ?? 0;
-        if (elSurvival) elSurvival.textContent = `${(data.overallSurvivalRate ?? 0).toFixed(1)}%`;
-        if (elDrives) elDrives.textContent = data.totalDrives ?? 0;
-        if (elVolunteers) elVolunteers.textContent = data.totalVolunteers ?? 0;
-
+        updateKPIs(data);
         updateStatus('System metrics synchronized with MariaDB.');
     } catch (err) {
         console.error('Error in refreshMetrics:', err);
@@ -227,8 +230,6 @@ async function loadTreesTable() {
 
     try {
         updateStatus('Fetching tree inventory from database...');
-        await loadDrivesAndVolunteers();
-
         const res = await fetch(`${API_BASE}/trees`);
         if (!res.ok) throw new Error('Failed to retrieve trees');
         cachedTrees = await res.json();
@@ -354,17 +355,28 @@ function openEditTreeModal(treeId) {
 
 async function handleTreeFormSubmit(event) {
     event.preventDefault();
-    const treeId = document.getElementById('tree-id').value;
-    const species = document.getElementById('tree-species').value.trim();
-    const locationGps = document.getElementById('tree-location').value.trim();
-    const datePlanted = document.getElementById('tree-date').value;
-    const driveVal = document.getElementById('tree-drive-select').value;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const treeId = (document.getElementById('tree-id')?.value || '').trim();
+    const species = (document.getElementById('tree-species')?.value || '').trim();
+    const locationGps = (document.getElementById('tree-location')?.value || '').trim();
+    const datePlanted = document.getElementById('tree-date')?.value;
+    const driveVal = document.getElementById('tree-drive-select')?.value;
     const plantationDriveId = driveVal ? parseInt(driveVal, 10) : null;
+
+    if (!species || !locationGps || !datePlanted) {
+        showAlert('Validation Error', 'Species, location GPS, and date planted are required.', true);
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
 
     try {
         if (!treeId) {
             // Grading Endpoint 1: POST /api/trees/log
-            const volVal = document.getElementById('tree-volunteer-select').value;
+            const volVal = document.getElementById('tree-volunteer-select')?.value;
             const volunteerId = volVal ? parseInt(volVal, 10) : null;
             const newVolInput = document.getElementById('tree-new-volunteer');
             const newVolunteerName = newVolInput ? newVolInput.value.trim() : '';
@@ -395,7 +407,7 @@ async function handleTreeFormSubmit(event) {
             showAlert('Success', `Plantation entry logged successfully for species: ${species}!${planterMsg}`);
         } else {
             // Update Existing Tree: PUT /api/trees/{id}
-            const status = document.getElementById('tree-status-select').value;
+            const status = document.getElementById('tree-status-select')?.value || 'ALIVE';
             const payload = {
                 species,
                 locationGps,
@@ -424,6 +436,11 @@ async function handleTreeFormSubmit(event) {
     } catch (err) {
         console.error('Tree submit error:', err);
         showAlert('Transaction Error', err.message, true);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'OK';
+        }
     }
 }
 
@@ -490,7 +507,6 @@ function deleteDrive(driveId) {
                     throw new Error(err.message || 'Failed to delete drive');
                 }
                 showAlert('Drive Deleted', `Plantation Drive #${driveId} has been deleted.`);
-                await loadDrivesAndVolunteers();
                 refreshAllData();
             } catch (err) {
                 showAlert('Delete Error', err.message, true);
@@ -501,10 +517,21 @@ function deleteDrive(driveId) {
 
 async function handleDriveFormSubmit(event) {
     event.preventDefault();
-    const driveId = document.getElementById('drive-id').value;
-    const name = document.getElementById('drive-name').value.trim();
-    const location = document.getElementById('drive-location').value.trim();
-    const date = document.getElementById('drive-date').value;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const driveId = (document.getElementById('drive-id')?.value || '').trim();
+    const name = (document.getElementById('drive-name')?.value || '').trim();
+    const location = (document.getElementById('drive-location')?.value || '').trim();
+    const date = document.getElementById('drive-date')?.value;
+
+    if (!name || !location || !date) {
+        showAlert('Validation Error', 'Drive name, location, and date are required.', true);
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
 
     try {
         if (!driveId) {
@@ -534,10 +561,14 @@ async function handleDriveFormSubmit(event) {
             closeModal('drive-modal');
             showAlert('Success', `Plantation drive #${driveId} updated successfully.`);
         }
-        await loadDrivesAndVolunteers();
         refreshAllData();
     } catch (err) {
         showAlert('Drive Error', err.message, true);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'OK';
+        }
     }
 }
 
@@ -576,7 +607,6 @@ function deleteVolunteer(volunteerId) {
                     throw new Error(err.message || 'Failed to delete volunteer');
                 }
                 showAlert('Volunteer Removed', `Volunteer #${volunteerId} has been removed.`);
-                await loadDrivesAndVolunteers();
                 refreshAllData();
             } catch (err) {
                 showAlert('Delete Error', err.message, true);
@@ -587,10 +617,22 @@ function deleteVolunteer(volunteerId) {
 
 async function handleVolunteerFormSubmit(event) {
     event.preventDefault();
-    const volunteerId = document.getElementById('volunteer-id').value;
-    const name = document.getElementById('volunteer-name').value.trim();
-    const treesVal = document.getElementById('volunteer-trees').value;
-    const totalTreesPlanted = treesVal ? parseInt(treesVal, 10) : 0;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const volunteerId = (document.getElementById('volunteer-id')?.value || '').trim();
+    const name = (document.getElementById('volunteer-name')?.value || '').trim();
+    const treesVal = document.getElementById('volunteer-trees')?.value;
+    const parsedTrees = parseInt(treesVal, 10);
+    const totalTreesPlanted = (!isNaN(parsedTrees) && parsedTrees >= 0) ? parsedTrees : 0;
+
+    if (!name) {
+        showAlert('Validation Error', 'Volunteer Full Name is required.', true);
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
 
     try {
         if (!volunteerId) {
@@ -620,10 +662,14 @@ async function handleVolunteerFormSubmit(event) {
             closeModal('volunteer-modal');
             showAlert('Success', `Volunteer #${volunteerId} updated successfully.`);
         }
-        await loadDrivesAndVolunteers();
         refreshAllData();
     } catch (err) {
         showAlert('Volunteer Error', err.message, true);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'OK';
+        }
     }
 }
 
@@ -631,51 +677,49 @@ async function handleVolunteerFormSubmit(event) {
 // STAGE 6: Health Check-Ins Tab Logic & Strict Dead Tree Rule Error Handling
 // ==========================================================================
 
-/**
- * Core Grading Endpoint 4: GET /api/trees/due-for-checkin
- * Fetches alive trees that require their next survival check-in.
- */
-async function loadDueTreesTable() {
+function renderDueTreesTable(dueTrees) {
     const tbody = document.getElementById('due-trees-table-body');
     const badge = document.getElementById('badge-due-count');
     if (!tbody) return;
 
+    if (badge) badge.textContent = dueTrees ? dueTrees.length : 0;
+
+    if (!dueTrees || dueTrees.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #435E42; padding: 16px; font-weight: bold;">All trees are currently up to date on survival check-ins. Inspection queue is empty.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = dueTrees.map(tree => {
+        const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? '[Unassigned]');
+        return `
+            <tr>
+                <td style="font-weight: bold; color: #0A246A;">#${tree.id}</td>
+                <td><strong>${escapeHtml(tree.species)}</strong></td>
+                <td>${driveName}</td>
+                <td>${tree.datePlanted || 'N/A'}</td>
+                <td><span class="status-tag status-alive">ALIVE</span></td>
+                <td style="text-align: center;">
+                    <button class="erp-btn erp-btn-primary" style="padding: 1px 6px;" onclick="openSubmitCheckInModal(${tree.id})">
+                        Record Check-In...
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function loadDueTreesTable() {
     try {
         updateStatus('Querying trees due for survival inspection...');
         const res = await fetch(`${API_BASE}/trees/due-for-checkin`);
         if (!res.ok) throw new Error('Failed to query due trees');
         const dueTrees = await res.json();
-
-        if (badge) badge.textContent = dueTrees.length;
-
-        if (!dueTrees || dueTrees.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #435E42; padding: 16px; font-weight: bold;">All trees are currently up to date on survival check-ins. Inspection queue is empty.</td></tr>`;
-            updateStatus('All trees up to date on check-ins.');
-            return;
-        }
-
-        tbody.innerHTML = dueTrees.map(tree => {
-            const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? '[Unassigned]');
-            return `
-                <tr>
-                    <td style="font-weight: bold; color: #0A246A;">#${tree.id}</td>
-                    <td><strong>${escapeHtml(tree.species)}</strong></td>
-                    <td>${driveName}</td>
-                    <td>${tree.datePlanted || 'N/A'}</td>
-                    <td><span class="status-tag status-alive">ALIVE</span></td>
-                    <td style="text-align: center;">
-                        <button class="erp-btn erp-btn-primary" style="padding: 1px 6px;" onclick="openSubmitCheckInModal(${tree.id})">
-                            Record Check-In...
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
+        renderDueTreesTable(dueTrees);
         updateStatus(`Found ${dueTrees.length} tree(s) requiring survival check-in.`);
     } catch (err) {
         console.error('Error loading due trees:', err);
-        tbody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Error loading check-in queue: ${err.message}</td></tr>`;
+        const tbody = document.getElementById('due-trees-table-body');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Error loading check-in queue: ${err.message}</td></tr>`;
     }
 }
 
@@ -733,16 +777,22 @@ function openQuickCheckInForTree(treeId) {
  */
 async function handleCheckInFormSubmit(event) {
     event.preventDefault();
-    const treeIdVal = document.getElementById('checkin-tree-id').value;
-    const treeId = parseInt(treeIdVal, 10);
-    const statusReported = document.getElementById('checkin-status').value;
-    const checkInDate = document.getElementById('checkin-date').value;
-    const volVal = document.getElementById('checkin-volunteer').value;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const treeIdVal = document.getElementById('checkin-tree-id')?.value;
+    const treeId = treeIdVal ? parseInt(treeIdVal, 10) : null;
+    const statusReported = document.getElementById('checkin-status')?.value;
+    const checkInDate = document.getElementById('checkin-date')?.value;
+    const volVal = document.getElementById('checkin-volunteer')?.value;
     const volunteerId = volVal ? parseInt(volVal, 10) : null;
 
     if (!treeId) {
         showAlert('Validation Error', 'Please select a tree to inspect.', true);
         return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
     }
 
     try {
@@ -785,6 +835,11 @@ async function handleCheckInFormSubmit(event) {
     } catch (err) {
         console.error('Check-in submission failure:', err);
         showAlert('System Error', err.message, true);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'OK';
+        }
     }
 }
 
@@ -824,9 +879,6 @@ async function loadStatsTables() {
             const stats = await statsRes.json();
             renderDriveStatsTable(stats.driveStats || []);
             renderSpeciesStatsTable(stats.speciesStats || []);
-        }
-
-        await refreshMetrics();
         updateStatus('Leaderboard and survival statistics updated.');
     } catch (err) {
         console.error('Error loading stats tables:', err);
@@ -946,7 +998,6 @@ function purgeAllDataFromUI() {
                     throw new Error('Failed to purge database records');
                 }
                 showAlert('Database Reset Complete', 'All records from all 4 tables have been permanently deleted from MariaDB. You can now register fresh data.');
-                await loadDrivesAndVolunteers();
                 refreshAllData();
             } catch (err) {
                 showAlert('Purge Error', err.message, true);
@@ -955,18 +1006,63 @@ function purgeAllDataFromUI() {
     );
 }
 
-// Global Refresh All
-function refreshAllData() {
-    refreshMetrics();
-    loadTreesTable();
-    loadDueTreesTable();
-    loadStatsTables();
+// Global Ultra-Fast Parallel Refresh
+let isRefreshingAll = false;
+async function refreshAllData() {
+    if (isRefreshingAll) return;
+    isRefreshingAll = true;
+
+    try {
+        updateStatus('Synchronizing system state...');
+        const [treesRes, drivesRes, volsRes, dueRes, leaderboardRes, survivalRes, statsRes] = await Promise.all([
+            fetch(`${API_BASE}/trees`),
+            fetch(`${API_BASE}/drives`),
+            fetch(`${API_BASE}/volunteers`),
+            fetch(`${API_BASE}/trees/due-for-checkin`),
+            fetch(`${API_BASE}/volunteers/leaderboard`),
+            fetch(`${API_BASE}/stats/survival-rates`),
+            fetch(`${API_BASE}/stats`)
+        ]);
+
+        if (drivesRes.ok) {
+            cachedDrives = await drivesRes.json();
+            populateDriveSelects();
+        }
+        if (volsRes.ok) {
+            cachedVolunteers = await volsRes.json();
+            populateVolunteerSelects();
+        }
+        if (treesRes.ok) {
+            cachedTrees = await treesRes.json();
+            renderTreesTable(cachedTrees);
+        }
+        if (dueRes.ok) {
+            const dueTrees = await dueRes.json();
+            renderDueTreesTable(dueTrees);
+        }
+        if (leaderboardRes.ok) {
+            const leaderboard = await leaderboardRes.json();
+            renderLeaderboardTable(leaderboard);
+        }
+        if (survivalRes.ok) {
+            const survivalData = await survivalRes.json();
+            renderDriveStatsTable(survivalData.driveStats || []);
+            renderSpeciesStatsTable(survivalData.speciesStats || []);
+        }
+        if (statsRes.ok) {
+            const stats = await statsRes.json();
+            updateKPIs(stats);
+        }
+        updateStatus('System state synchronized.');
+    } catch (err) {
+        console.error('Error in refreshAllData:', err);
+        updateStatus('Error synchronizing data.');
+    } finally {
+        isRefreshingAll = false;
+    }
 }
 
 // Initial Bootstrapping
 document.addEventListener('DOMContentLoaded', () => {
-    refreshMetrics();
-    loadTreesTable();
-    loadDueTreesTable();
-    loadStatsTables();
+    refreshAllData();
 });

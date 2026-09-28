@@ -21,8 +21,21 @@ public class VolunteerService {
     }
 
     public Volunteer createVolunteer(Volunteer volunteer) {
-        if (volunteer.getTotalTreesPlanted() == null) {
+        if (volunteer.getName() == null || volunteer.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Volunteer name is required.");
+        }
+        volunteer.setName(volunteer.getName().trim());
+        if (volunteer.getTotalTreesPlanted() == null || volunteer.getTotalTreesPlanted() < 0) {
             volunteer.setTotalTreesPlanted(0);
+        }
+        java.util.Optional<Volunteer> existing = volunteerRepository.findByNameIgnoreCase(volunteer.getName());
+        if (existing.isPresent()) {
+            Volunteer found = existing.get();
+            if (volunteer.getTotalTreesPlanted() != null && volunteer.getTotalTreesPlanted() > 0) {
+                int current = found.getTotalTreesPlanted() != null ? found.getTotalTreesPlanted() : 0;
+                found.setTotalTreesPlanted(current + volunteer.getTotalTreesPlanted());
+            }
+            return volunteerRepository.save(found);
         }
         return volunteerRepository.save(volunteer);
     }
