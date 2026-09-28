@@ -128,7 +128,7 @@ function closeConfirmModal(isConfirmed = false) {
 
 function showAboutDialog() {
     showAlert(
-        'About GreenLog ERP',
+        'About GreenLog',
         'GreenLog Enterprise System v2.4\nTree Plantation Drive Tracker\nBuilt strictly with Spring Boot, MariaDB, and Vanilla JS.\nEarly 2000s Enterprise Edition.',
         false
     );
