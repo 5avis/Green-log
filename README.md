@@ -1,19 +1,20 @@
 # 🌱 GreenLog — Enterprise Tree Plantation Drive Tracker
 
 > **A mission-critical, full-stack ERP system for tracking environmental plantation drives, monitoring sapling health check-ins, enforcing survival business rules, and evaluating volunteer contributions.**  
-> Built with **Spring Boot 3**, **Spring Data JPA**, **MariaDB**, and an authentic **Early-2000s Enterprise ERP Vanilla UI**.
+> Built with **Spring Boot 3**, **Spring Data JPA**, **MariaDB / MySQL**, and an authentic **Early-2000s Enterprise ERP Vanilla UI**.
 
 ---
 
 ## 📋 Table of Contents
-- [System Architecture & Tech Stack](#-system-architecture--tech-stack)
-- [Core Business Rules](#-core-business-rules)
-- [REST API Specification](#-rest-api-specification)
-- [Relational Database Schema](#-relational-database-schema)
-- [Early-2000s ERP Frontend Design](#-early-2000s-erp-frontend-design)
-- [Getting Started & Local Setup](#-getting-started--local-setup)
-- [Automated Test Suite](#-automated-test-suite)
-- [Project Directory Layout](#-project-directory-layout)
+- [System Architecture & Tech Stack](#system-architecture--tech-stack)
+- [Core Business Rules](#core-business-rules)
+- [REST API Specification](#rest-api-specification)
+- [Relational Database Schema](#relational-database-schema)
+- [Early-2000s ERP Frontend Design](#early-2000s-erp-frontend-design)
+- [Getting Started & Local Setup](#getting-started--local-setup)
+- [Cloud & Container Deployment](#cloud--container-deployment)
+- [Automated Test Suite](#automated-test-suite)
+- [Project Directory Layout](#project-directory-layout)
 
 ---
 
@@ -35,14 +36,15 @@
                               │ JDBC
                               ▼
 +-------------------------------------------------------------+
-|                     MariaDB Database                        |
+|                 MariaDB / MySQL Database                    |
 |  Tables: plantation_drives, volunteers, trees, check_ins    |
 +-------------------------------------------------------------+
 ```
 
 * **Backend Framework:** Java 21, Spring Boot 3.5.0
 * **Persistence & ORM:** Spring Data JPA, Hibernate, MariaDB JDBC Driver
-* **Database Engine:** MariaDB (`green_log`)
+* **Database Engine:** MariaDB / MySQL (`green_log` / `defaultdb`)
+* **Containerization:** Multi-stage Dockerfile (Eclipse Temurin 21 JRE Alpine)
 * **Frontend:** Vanilla HTML5, Pure CSS3 (Windows Classic / ERP theme), Vanilla JavaScript (ES6 Modules/Fetch API — zero external runtime frameworks)
 * **Automated Testing:** JUnit 5, MockMvc, AssertJ, Spring Boot Test
 
@@ -59,7 +61,7 @@
    * Health inspectors must follow up on saplings periodically.
    * Any tree planted over 30 days ago without any check-ins, or whose most recent check-in is older than 30 days, is automatically routed into the **Health Check-ins Due** queue with badge alerts.
 3. **Real-Time Dynamic Survival Metrics**:
-   * Survival rates ($\frac{\text{Alive Trees}}{\text{Total Trees}} \times 100\%$) are calculated in real time across two distinct dimensions:
+   * Survival rates are calculated in real time across two distinct dimensions:
      * **By Plantation Drive**: Quantifies site and event efficacy.
      * **By Tree Species**: Identifies species resilience and climate suitability.
 4. **Gamified Volunteer Contribution**:
@@ -147,15 +149,16 @@
 
 The client interface is crafted to replicate the tactile reliability and high-density productivity of an authentic early-2000s enterprise ERP software suite (SAP R/3, Windows Classic ERP):
 
+* **Default Scale**: Calibrated with a default 110% root scale (`zoom: 1.1`) for high readability across modern desktop monitors.
 * **Color Palette**: Olive drab headers (`#435E42`), Windows classic light grey window chrome (`#ECE9D8` / `#D4D0C8`), and dark blue highlight rows (`#0A246A`).
 * **Rigid 3D Borders**: Inset (`border: 2px inset #FFF`) and outset (`border: 2px outset #FFF`) beveled borders on all inputs, table headers, and command buttons.
 * **Compact Typography**: Fixed 11px `Tahoma, "MS Sans Serif", Arial, sans-serif`.
 * **Zero Browser Alert Boxes**: Replaced native browser `alert()` and `confirm()` with custom centered Windows-styled 3D modal dialogs.
-* **Persistent Bottom Status Bar**: Pinned multi-segment status bar displaying real-time MariaDB connection state, pending inspection counters, and transactional log messages.
+* **Persistent Bottom Status Bar**: Pinned multi-segment status bar displaying real-time database connection state, pending inspection counters, and transactional log messages.
 * **Interactive File-Folder Tabs**:
-  * 📁 **Drives & Trees**: Master tree ledger with instant drive filtering, single-row edits, and deletions.
-  * 📁 **Health Check-ins Due**: Urgent inspection queue with dynamic tree inspection launchpad.
-  * 📁 **Leaderboard & Stats**: Multi-column breakdown of Volunteer rankings, Drive Survival %, and Species Survival %.
+  * **Drives & Trees**: Master tree ledger with instant drive filtering, single-row edits, and deletions.
+  * **Health Check-ins Due**: Urgent inspection queue with dynamic tree inspection launchpad.
+  * **Leaderboard & Stats**: Multi-column breakdown of Volunteer rankings, Drive Survival %, and Species Survival %.
 
 ---
 
@@ -163,7 +166,7 @@ The client interface is crafted to replicate the tactile reliability and high-de
 
 ### 1. Prerequisites
 * **Java 21** or later (`java -version`)
-* **MariaDB Server** running locally on port `3306`
+* **MariaDB or MySQL Server** running locally on port `3306`
 
 ### 2. Configure Database
 Ensure MariaDB is running, and create the database:
@@ -171,7 +174,7 @@ Ensure MariaDB is running, and create the database:
 CREATE DATABASE green_log CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Update [`src/main/resources/application.properties`](file:///home/siva/Projects/Green-log/src/main/resources/application.properties) if your credentials differ:
+Update `src/main/resources/application.properties` if local credentials differ:
 ```properties
 spring.datasource.url=jdbc:mariadb://localhost:3306/green_log
 spring.datasource.username=root
@@ -183,10 +186,28 @@ spring.jpa.hibernate.ddl-auto=update
 ```bash
 ./mvnw clean spring-boot:run
 ```
-Once started, navigate to:
-```
-http://localhost:8080
-```
+Once started, access the ERP interface in your local browser at port `8080`.
+
+---
+
+## ☁️ Cloud & Container Deployment
+
+The project is container-ready and supports zero-downtime deployment on cloud container hosts:
+
+### 1. Multi-Stage Container Build
+The included `Dockerfile` packages the application in two optimized stages:
+* **Build Stage**: Maven 3.9 + Temurin JDK 21 compiles the source code.
+* **Runtime Stage**: Lightweight Eclipse Temurin 21 JRE Alpine image with memory constraints (`-XX:MaxRAMPercentage=75.0`).
+
+### 2. Dynamic Environment Variables
+Cloud deployments configure database connectivity dynamically via environment variables without modifying source files:
+
+| Environment Variable | Description |
+| :--- | :--- |
+| `PORT` | Dynamic HTTP port assigned by cloud host |
+| `DB_URL` | JDBC connection string to cloud database with SSL mode enabled |
+| `DB_USERNAME` | Cloud database administrative username |
+| `DB_PASSWORD` | Cloud database secret password |
 
 ---
 
@@ -199,12 +220,12 @@ A rigorous test suite covers both unit logic and web controller integration:
 ```
 
 ### Key Test Coverage:
-* [`ServiceLayerTests.java`](file:///home/siva/Projects/Green-log/src/test/java/com/example/greenlog/ServiceLayerTests.java):
+* `ServiceLayerTests.java`:
   * Verification of the **Dead Tree Rule** throwing `DeadTreeException`.
   * Volunteer tree increment logic upon planting.
   * Mathematical accuracy of species and drive survival rates.
   * Auto-detection of due check-ins.
-* [`ApiControllerTests.java`](file:///home/siva/Projects/Green-log/src/test/java/com/example/greenlog/ApiControllerTests.java):
+* `ApiControllerTests.java`:
   * MockMvc tests ensuring `400 Bad Request` response payload format when attempting illegal check-ins on dead trees.
   * Proper HTTP status codes on all endpoints (`201 Created`, `200 OK`, `204 No Content`).
   * Full JSON structure validation for analytics and leaderboard outputs.
@@ -215,8 +236,9 @@ A rigorous test suite covers both unit logic and web controller integration:
 
 ```
 Green-log/
+├── Dockerfile                            # Multi-stage container deployment specification
 ├── pom.xml                               # Maven project configuration
-├── README.md                             # Comprehensive technical documentation
+├── README.md                             # Technical system documentation
 ├── src/
 │   ├── main/
 │   │   ├── java/com/example/greenlog/
@@ -236,12 +258,12 @@ Green-log/
 │   │   │   ├── dto/                      # Transfer Objects & Payloads
 │   │   │   └── exception/                # Global Controller Advice & Custom Exceptions
 │   │   └── resources/
-│   │       ├── application.properties    # MariaDB connection config
+│   │       ├── application.properties    # Dynamic port and DB configuration
 │   │       └── static/                   # Early-2000s ERP Frontend
 │   │           ├── index.html            # Main Single-Page ERP UI
-│   │           ├── css/erp-theme.css     # 3D Windows Classic & Tahoma styles
+│   │           ├── css/erp-theme.css     # 3D Windows Classic & 110% zoom styles
 │   │           ├── js/app.js             # Pure JavaScript Controller
-│   │           └── icons8-fruit-48.png   # Transparent application icon
+│   │           └── icons8-fruit-48.png   # Application icon
 │   └── test/
 │       └── java/com/example/greenlog/
 │           ├── ServiceLayerTests.java    # Business logic verification
