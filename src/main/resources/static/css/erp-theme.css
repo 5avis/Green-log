@@ -117,18 +117,20 @@ body {
 }
 
 .saas-navbar-brand, .erp-title-bar-left {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    line-height: 1;
     text-decoration: none;
     cursor: default;
 }
 
-.saas-navbar-brand img, .erp-title-bar-left img {
-    width: 32px;
-    height: 32px;
+.saas-navbar-brand img, .erp-title-bar-left img, .brand-logo {
+    width: 26px;
+    height: 26px;
     display: block;
     object-fit: contain;
+    flex-shrink: 0;
 }
 
 .brand-title {
@@ -136,6 +138,11 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
 }
 
 .brand-badge {
@@ -143,11 +150,15 @@ body {
     color: var(--primary);
     font-size: 11px;
     font-weight: 600;
-    padding: 3px 10px;
+    line-height: 1;
+    padding: 4px 10px;
     border-radius: var(--radius-pill);
     border: 1px solid var(--primary-border);
-    margin-left: 6px;
     letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
 }
 
 /* Modern Menu Bar Dropdowns */
