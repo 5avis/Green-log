@@ -38,10 +38,11 @@ function switchTab(tabKey) {
 // --- Status Bar Clock & Updates ---
 function updateClock() {
     const clock = document.getElementById('clock-display');
-    if (clock) {
-        const now = new Date();
-        clock.textContent = now.toLocaleTimeString();
-    }
+    const navClock = document.getElementById('nav-clock-display');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    if (clock) clock.textContent = timeStr;
+    if (navClock) navClock.textContent = timeStr;
 }
 setInterval(updateClock, 1000);
 updateClock();
@@ -76,10 +77,10 @@ function showAlert(title, message, isError = false) {
 
     if (isError) {
         if (header) header.classList.add('error');
-        if (iconEl) iconEl.textContent = '[X]';
+        if (iconEl) iconEl.textContent = '⚠️';
     } else {
         if (header) header.classList.remove('error');
-        if (iconEl) iconEl.textContent = '[i]';
+        if (iconEl) iconEl.textContent = 'ℹ️';
     }
 
     if (modal) modal.classList.add('active');
@@ -90,17 +91,19 @@ function closeAlertModal() {
     if (modal) modal.classList.remove('active');
 }
 
-// --- Classic ERP Centered Confirmation Dialog ---
+// --- Modern Confirmation Dialog ---
 let pendingConfirmCallback = null;
 
 function showConfirm(title, message, onConfirmCallback) {
     const modal = document.getElementById('confirm-modal');
     const titleEl = document.getElementById('confirm-modal-title');
     const msgEl = document.getElementById('confirm-modal-message');
+    const iconEl = document.getElementById('confirm-modal-icon');
     const okBtn = document.getElementById('confirm-modal-ok-btn');
 
     if (titleEl) titleEl.textContent = title;
     if (msgEl) msgEl.textContent = message;
+    if (iconEl) iconEl.textContent = '❓';
 
     pendingConfirmCallback = onConfirmCallback;
 
@@ -129,7 +132,7 @@ function closeConfirmModal(isConfirmed = false) {
 function showAboutDialog() {
     showAlert(
         'About GreenLog',
-        'GreenLog Enterprise System v2.4\nTree Plantation Drive Tracker\nBuilt strictly with Spring Boot, MariaDB, and Vanilla JS.\nEarly 2000s Enterprise Edition.',
+        'GreenLog — Modern SaaS Edition v3.0\nTree Plantation Drive & Survival Monitoring System\nBuilt with Spring Boot 3.5, MariaDB/MySQL, and Vanilla JS.\nUniversal UI Theme: Modern, Clean SaaS (Soft & Airy).',
         false
     );
 }
@@ -253,7 +256,7 @@ function renderTreesTable(trees) {
     }
 
     tbody.innerHTML = trees.map(tree => {
-        const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? '<span style="color: #888;">[Unassigned]</span>');
+        const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? '<span style="color: var(--text-muted);">Unassigned</span>');
         const isDead = (tree.status || '').toUpperCase() === 'DEAD';
         const statusBadge = isDead
             ? `<span class="status-tag status-dead">DEAD</span>`
@@ -261,16 +264,18 @@ function renderTreesTable(trees) {
 
         return `
             <tr id="tree-row-${tree.id}">
-                <td style="font-weight: bold; color: #0A246A;">#${tree.id}</td>
-                <td><strong>${escapeHtml(tree.species)}</strong></td>
-                <td>${driveName}</td>
-                <td style="font-family: monospace;">${escapeHtml(tree.locationGps)}</td>
-                <td>${tree.datePlanted || 'N/A'}</td>
+                <td style="font-weight: 600; color: var(--primary);">#${tree.id}</td>
+                <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(tree.species)}</strong></td>
+                <td style="color: var(--text-secondary);">${driveName}</td>
+                <td style="font-family: monospace; font-size: 12px; color: var(--text-secondary);">${escapeHtml(tree.locationGps)}</td>
+                <td style="color: var(--text-secondary);">${tree.datePlanted || 'N/A'}</td>
                 <td>${statusBadge}</td>
                 <td style="text-align: center;">
-                    <button class="erp-btn" style="padding: 1px 5px;" onclick="openEditTreeModal(${tree.id})">Edit</button>
-                    <button class="erp-btn" style="padding: 1px 5px; color: #8B0000;" onclick="deleteTree(${tree.id})">Del</button>
-                    <button class="erp-btn" style="padding: 1px 5px;" onclick="openQuickCheckInForTree(${tree.id})">Check-In</button>
+                    <div style="display: inline-flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-sm btn-ghost" onclick="openEditTreeModal(${tree.id})">Edit</button>
+                        <button class="btn btn-sm btn-subtle-blue" onclick="openQuickCheckInForTree(${tree.id})">Check-In</button>
+                        <button class="btn btn-sm btn-subtle-red" onclick="deleteTree(${tree.id})">Del</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -685,22 +690,22 @@ function renderDueTreesTable(dueTrees) {
     if (badge) badge.textContent = dueTrees ? dueTrees.length : 0;
 
     if (!dueTrees || dueTrees.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #435E42; padding: 16px; font-weight: bold;">All trees are currently up to date on survival check-ins. Inspection queue is empty.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--status-alive-text); padding: 24px; font-weight: 500;">✓ All trees are currently up to date on survival check-ins. Inspection queue is empty.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = dueTrees.map(tree => {
-        const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? '[Unassigned]');
+        const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? 'Unassigned');
         return `
             <tr>
-                <td style="font-weight: bold; color: #0A246A;">#${tree.id}</td>
-                <td><strong>${escapeHtml(tree.species)}</strong></td>
-                <td>${driveName}</td>
-                <td>${tree.datePlanted || 'N/A'}</td>
+                <td style="font-weight: 600; color: var(--primary);">#${tree.id}</td>
+                <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(tree.species)}</strong></td>
+                <td style="color: var(--text-secondary);">${driveName}</td>
+                <td style="color: var(--text-secondary);">${tree.datePlanted || 'N/A'}</td>
                 <td><span class="status-tag status-alive">ALIVE</span></td>
                 <td style="text-align: center;">
-                    <button class="erp-btn erp-btn-primary" style="padding: 1px 6px;" onclick="openSubmitCheckInModal(${tree.id})">
-                        Record Check-In...
+                    <button class="btn btn-sm btn-primary btn-pill" onclick="openSubmitCheckInModal(${tree.id})">
+                        Record Check-In
                     </button>
                 </td>
             </tr>
@@ -895,33 +900,35 @@ function renderLeaderboardTable(volunteers) {
     if (!tbody) return;
 
     if (!volunteers || volunteers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #777; padding: 12px;">No volunteers registered yet. Click "Register Volunteer" to add participants.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 24px;">No volunteers registered yet. Click "Register Volunteer" to add participants.</td></tr>';
         return;
     }
 
     tbody.innerHTML = volunteers.map((v, idx) => {
         const rank = idx + 1;
-        let rankBadge = `#${rank}`;
-        let rowStyle = '';
+        let rankBadge = `<span class="badge-rank">#${rank}</span>`;
+        let rowClass = '';
         if (rank === 1) {
-            rankBadge = '<strong>#1 [Top]</strong>';
-            rowStyle = 'background-color: #FAF5DC; font-weight: bold;';
+            rankBadge = '<span class="badge-rank badge-rank-1">🥇 #1 Top</span>';
+            rowClass = 'row-highlight-top';
         } else if (rank === 2) {
-            rankBadge = '<strong>#2</strong>';
+            rankBadge = '<span class="badge-rank badge-rank-2">🥈 #2</span>';
         } else if (rank === 3) {
-            rankBadge = '<strong>#3</strong>';
+            rankBadge = '<span class="badge-rank badge-rank-3">🥉 #3</span>';
         }
 
         return `
-            <tr style="${rowStyle}">
-                <td style="text-align: center; color: #0A246A;">${rankBadge}</td>
-                <td><strong>${escapeHtml(v.name)}</strong></td>
-                <td style="font-family: monospace; font-weight: bold; text-align: right; padding-right: 12px;">
+            <tr class="${rowClass}">
+                <td style="text-align: center;">${rankBadge}</td>
+                <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(v.name)}</strong></td>
+                <td style="font-weight: 600; text-align: right; padding-right: 16px; color: var(--text-primary);">
                     ${v.totalTreesPlanted ?? 0}
                 </td>
                 <td style="text-align: center;">
-                    <button class="erp-btn" style="padding: 1px 5px;" onclick="openEditVolunteerModal(${v.id})">Edit</button>
-                    <button class="erp-btn" style="padding: 1px 5px; color: #8B0000;" onclick="deleteVolunteer(${v.id})">Del</button>
+                    <div style="display: inline-flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-sm btn-ghost" onclick="openEditVolunteerModal(${v.id})">Edit</button>
+                        <button class="btn btn-sm btn-subtle-red" onclick="deleteVolunteer(${v.id})">Del</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -936,23 +943,30 @@ function renderDriveStatsTable(driveStats) {
     if (!tbody) return;
 
     if (!driveStats || driveStats.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #777; padding: 12px;">No plantation drives recorded yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 24px;">No plantation drives recorded yet.</td></tr>';
         return;
     }
 
     tbody.innerHTML = driveStats.map(d => {
         const rate = (d.survivalRate ?? 0).toFixed(1);
-        const rateColor = d.survivalRate >= 75 ? 'color: #276A3C;' : (d.survivalRate < 50 ? 'color: #C00000;' : 'color: #000000;');
+        const rateColor = d.survivalRate >= 75 ? 'color: #15803D;' : (d.survivalRate < 50 ? 'color: #B91C1C;' : 'color: #1E293B;');
+        const badgeBg = d.survivalRate >= 75 ? 'background: #DCFCE7;' : (d.survivalRate < 50 ? 'background: #FEE2E2;' : 'background: #EFF6FF;');
         return `
             <tr>
-                <td><strong>${escapeHtml(d.driveName)}</strong> <small style="color: #666;">(${escapeHtml(d.location)})</small></td>
-                <td style="text-align: center;">${d.totalTrees}</td>
-                <td style="text-align: center; color: #276A3C; font-weight: bold;">${d.aliveTrees}</td>
-                <td style="text-align: center; color: #C00000; font-weight: bold;">${d.deadTrees}</td>
-                <td style="text-align: right; font-weight: bold; ${rateColor}">${rate}%</td>
+                <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(d.driveName)}</strong> <small style="color: var(--text-secondary);">(${escapeHtml(d.location)})</small></td>
+                <td style="text-align: center; color: var(--text-secondary);">${d.totalTrees}</td>
+                <td style="text-align: center; color: #15803D; font-weight: 600;">${d.aliveTrees}</td>
+                <td style="text-align: center; color: #B91C1C; font-weight: 600;">${d.deadTrees}</td>
+                <td style="text-align: right; font-weight: 600;">
+                    <span style="display: inline-block; padding: 3px 10px; border-radius: 9999px; ${badgeBg} ${rateColor}">
+                        ${rate}%
+                    </span>
+                </td>
                 <td style="text-align: center;">
-                    <button class="erp-btn" style="padding: 1px 5px;" onclick="openEditDriveModal(${d.driveId})">Edit</button>
-                    <button class="erp-btn" style="padding: 1px 5px; color: #8B0000;" onclick="deleteDrive(${d.driveId})">Del</button>
+                    <div style="display: inline-flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-sm btn-ghost" onclick="openEditDriveModal(${d.driveId})">Edit</button>
+                        <button class="btn btn-sm btn-subtle-red" onclick="deleteDrive(${d.driveId})">Del</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -967,20 +981,25 @@ function renderSpeciesStatsTable(speciesStats) {
     if (!tbody) return;
 
     if (!speciesStats || speciesStats.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777; padding: 12px;">No species recorded in database yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 24px;">No species recorded in database yet.</td></tr>';
         return;
     }
 
     tbody.innerHTML = speciesStats.map(s => {
         const rate = (s.survivalRate ?? 0).toFixed(1);
-        const rateColor = s.survivalRate >= 75 ? 'color: #276A3C;' : (s.survivalRate < 50 ? 'color: #C00000;' : 'color: #000000;');
+        const rateColor = s.survivalRate >= 75 ? 'color: #15803D;' : (s.survivalRate < 50 ? 'color: #B91C1C;' : 'color: #1E293B;');
+        const badgeBg = s.survivalRate >= 75 ? 'background: #DCFCE7;' : (s.survivalRate < 50 ? 'background: #FEE2E2;' : 'background: #EFF6FF;');
         return `
             <tr>
-                <td><strong>${escapeHtml(s.species)}</strong></td>
-                <td style="text-align: center;">${s.totalTrees}</td>
-                <td style="text-align: center; color: #276A3C; font-weight: bold;">${s.aliveTrees}</td>
-                <td style="text-align: center; color: #C00000; font-weight: bold;">${s.deadTrees}</td>
-                <td style="text-align: right; font-weight: bold; ${rateColor}">${rate}%</td>
+                <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(s.species)}</strong></td>
+                <td style="text-align: center; color: var(--text-secondary);">${s.totalTrees}</td>
+                <td style="text-align: center; color: #15803D; font-weight: 600;">${s.aliveTrees}</td>
+                <td style="text-align: center; color: #B91C1C; font-weight: 600;">${s.deadTrees}</td>
+                <td style="text-align: right; font-weight: 600;">
+                    <span style="display: inline-block; padding: 3px 10px; border-radius: 9999px; ${badgeBg} ${rateColor}">
+                        ${rate}%
+                    </span>
+                </td>
             </tr>
         `;
     }).join('');
