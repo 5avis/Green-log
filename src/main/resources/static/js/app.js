@@ -906,20 +906,10 @@ function renderLeaderboardTable(volunteers) {
 
     tbody.innerHTML = volunteers.map((v, idx) => {
         const rank = idx + 1;
-        let rankBadge = `<span class="badge-rank">#${rank}</span>`;
-        let rowClass = '';
-        if (rank === 1) {
-            rankBadge = '<span class="badge-rank badge-rank-1">🥇 #1 Top</span>';
-            rowClass = 'row-highlight-top';
-        } else if (rank === 2) {
-            rankBadge = '<span class="badge-rank badge-rank-2">🥈 #2</span>';
-        } else if (rank === 3) {
-            rankBadge = '<span class="badge-rank badge-rank-3">🥉 #3</span>';
-        }
 
         return `
-            <tr class="${rowClass}">
-                <td style="text-align: center;">${rankBadge}</td>
+            <tr>
+                <td style="text-align: center; font-weight: 600; color: var(--text-primary);">${rank}</td>
                 <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(v.name)}</strong></td>
                 <td style="font-weight: 600; text-align: right; padding-right: 16px; color: var(--text-primary);">
                     ${v.totalTreesPlanted ?? 0}
