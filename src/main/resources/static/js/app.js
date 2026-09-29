@@ -264,7 +264,7 @@ function renderTreesTable(trees) {
 
         return `
             <tr id="tree-row-${tree.id}">
-                <td style="font-weight: 600; color: var(--primary);">#${tree.id}</td>
+                <td style="font-weight: 600; color: var(--primary);">${tree.id}</td>
                 <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(tree.species)}</strong></td>
                 <td style="color: var(--text-secondary);">${driveName}</td>
                 <td style="font-family: monospace; font-size: 12px; color: var(--text-secondary);">${escapeHtml(tree.locationGps)}</td>
@@ -341,7 +341,7 @@ function openEditTreeModal(treeId) {
     }
 
     loadDrivesAndVolunteers();
-    document.getElementById('tree-modal-title').textContent = `Edit Tree Record #${tree.id}`;
+    document.getElementById('tree-modal-title').textContent = `Edit Tree Record ${tree.id}`;
     document.getElementById('tree-id').value = tree.id;
     document.getElementById('tree-species').value = tree.species;
     document.getElementById('tree-location').value = tree.locationGps;
@@ -421,7 +421,7 @@ async function handleTreeFormSubmit(event) {
                 plantationDrive: plantationDriveId ? { id: plantationDriveId } : null
             };
 
-            updateStatus(`Updating tree #${treeId}...`);
+            updateStatus(`Updating tree ${treeId}...`);
             const res = await fetch(`${API_BASE}/trees/${treeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -434,7 +434,7 @@ async function handleTreeFormSubmit(event) {
             }
 
             closeModal('tree-modal');
-            showAlert('Success', `Tree #${treeId} updated successfully.`);
+            showAlert('Success', `Tree ${treeId} updated successfully.`);
         }
 
         refreshAllData();
@@ -452,10 +452,10 @@ async function handleTreeFormSubmit(event) {
 function deleteTree(treeId) {
     showConfirm(
         'Confirm Delete Operation',
-        `Are you sure you want to permanently delete Tree #${treeId}? This action cannot be reversed.`,
+        `Are you sure you want to permanently delete Tree ${treeId}? This action cannot be reversed.`,
         async () => {
             try {
-                updateStatus(`Deleting tree record #${treeId}...`);
+                updateStatus(`Deleting tree record ${treeId}...`);
                 const res = await fetch(`${API_BASE}/trees/${treeId}`, {
                     method: 'DELETE'
                 });
@@ -465,7 +465,7 @@ function deleteTree(treeId) {
                     throw new Error(errData.message || 'Failed to delete tree');
                 }
 
-                showAlert('Record Deleted', `Tree #${treeId} was permanently deleted from database.`);
+                showAlert('Record Deleted', `Tree ${treeId} was permanently deleted from database.`);
                 refreshAllData();
             } catch (err) {
                 console.error('Delete error:', err);
@@ -698,7 +698,7 @@ function renderDueTreesTable(dueTrees) {
         const driveName = tree.plantationDrive ? tree.plantationDrive.name : (tree.plantationDriveName ?? 'Unassigned');
         return `
             <tr>
-                <td style="font-weight: 600; color: var(--primary);">#${tree.id}</td>
+                <td style="font-weight: 600; color: var(--primary);">${tree.id}</td>
                 <td><strong style="color: var(--text-primary); font-weight: 600;">${escapeHtml(tree.species)}</strong></td>
                 <td style="color: var(--text-secondary);">${driveName}</td>
                 <td style="color: var(--text-secondary);">${tree.datePlanted || 'N/A'}</td>
@@ -747,7 +747,7 @@ async function openSubmitCheckInModal(preselectedTreeId = null) {
         treeSelect.innerHTML = '<option value="">-- Select Tree to Check --</option>' +
             cachedTrees.map(t => {
                 const isDead = (t.status || '').toUpperCase() === 'DEAD';
-                const label = `#${t.id}: ${t.species} [${t.status}] (${t.locationGps})`;
+                const label = `Tree ${t.id}: ${t.species} [${t.status}] (${t.locationGps})`;
                 return `<option value="${t.id}" ${isDead ? 'style="color: red;"' : ''}>${escapeHtml(label)}</option>`;
             }).join('');
 
@@ -801,7 +801,7 @@ async function handleCheckInFormSubmit(event) {
     }
 
     try {
-        updateStatus(`Submitting survival check-in for Tree #${treeId}...`);
+        updateStatus(`Submitting survival check-in for Tree ${treeId}...`);
         const payload = {
             treeId,
             statusReported,
@@ -832,7 +832,7 @@ async function handleCheckInFormSubmit(event) {
 
         showAlert(
             'Check-In Recorded Successfully',
-            `Survival check-in recorded for Tree #${savedCheckIn.treeId || treeId} (${savedCheckIn.treeSpecies || 'Tree'}).\nReported Status: ${savedCheckIn.statusReported}\nSurvival stats recalculated automatically.`,
+            `Survival check-in recorded for Tree ${savedCheckIn.treeId || treeId} (${savedCheckIn.treeSpecies || 'Tree'}).\nReported Status: ${savedCheckIn.statusReported}\nSurvival stats recalculated automatically.`,
             false
         );
 
