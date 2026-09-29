@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GreenLog — Modern Tree Plantation & Survival Tracker</title>
     <link rel="icon" type="image/png" href="icons8-fruit-48.png">
-    <link rel="stylesheet" href="css/erp-theme.css?v=3.0">
+    <link rel="stylesheet" href="css/erp-theme.css?v=3.1">
 </head>
 <body>
 
@@ -19,56 +19,6 @@
                 <span class="brand-title">GreenLog</span>
                 <span class="brand-badge">SaaS Cloud</span>
             </div>
-        </div>
-
-        <nav class="saas-nav-menus">
-            <div class="nav-dropdown-item">
-                <span>File ▾</span>
-                <div class="nav-dropdown-menu">
-                    <a onclick="openNewTreeModal()">+ Log Plantation Entry <kbd>Ctrl+N</kbd></a>
-                    <a onclick="openNewDriveModal()">+ New Plantation Drive</a>
-                    <a onclick="openNewVolunteerModal()">+ Register Volunteer</a>
-                    <div class="nav-dropdown-divider"></div>
-                    <a onclick="window.location.reload()">Reload Application <kbd>Alt+F4</kbd></a>
-                </div>
-            </div>
-            <div class="nav-dropdown-item">
-                <span>View ▾</span>
-                <div class="nav-dropdown-menu">
-                    <a onclick="switchTab('drives-trees')">Drives & Trees View</a>
-                    <a onclick="switchTab('checkins')">Health Check-ins Due</a>
-                    <a onclick="switchTab('stats')">Leaderboard & Stats</a>
-                    <div class="nav-dropdown-divider"></div>
-                    <a onclick="refreshAllData()">Refresh All Data <kbd>F5</kbd></a>
-                </div>
-            </div>
-            <div class="nav-dropdown-item">
-                <span>Tools ▾</span>
-                <div class="nav-dropdown-menu">
-                    <a onclick="refreshMetrics()">Recalculate Survival Rates</a>
-                    <a onclick="openSubmitCheckInModal()">Quick Check-In Utility</a>
-                    <div class="nav-dropdown-divider"></div>
-                    <a onclick="purgeAllDataFromUI()" style="color: #DC2626;">Purge All Records...</a>
-                </div>
-            </div>
-            <div class="nav-dropdown-item">
-                <span>Help ▾</span>
-                <div class="nav-dropdown-menu">
-                    <a onclick="showAboutDialog()">About GreenLog...</a>
-                </div>
-            </div>
-        </nav>
-
-        <div class="saas-navbar-actions">
-            <div class="status-pill status-pill-success">
-                <span class="status-dot"></span> MariaDB Connected
-            </div>
-            <div class="status-pill status-pill-neutral" id="nav-clock-display">
-                00:00:00
-            </div>
-            <button class="btn btn-primary btn-pill" onclick="openNewTreeModal()">
-                + Log Tree
-            </button>
         </div>
     </header>
 
@@ -528,6 +478,6 @@
     </div>
 </div>
 
-<script src="js/app.js?v=3.0"></script>
+<script src="js/app.js?v=3.1"></script>
 </body>
 </html>

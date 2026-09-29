@@ -101,7 +101,8 @@ body {
     padding: 12px 28px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 12px;
     height: 64px;
     flex-shrink: 0;
     position: sticky;
