@@ -24,7 +24,8 @@
     --text-muted: #94A3B8;
 
     --border-subtle: #E2E8F0;
-    --border-card: #F1F5F9;
+    --border-card: rgba(226, 232, 240, 0.85);
+    --border-card-highlight: rgba(191, 219, 254, 0.55);
 
     /* Status Colors (Soft Pastel Backgrounds + Darker Accessible Text) */
     --status-alive-bg: #DCFCE7;
@@ -36,12 +37,12 @@
     --status-info-bg: #EFF6FF;
     --status-info-text: #1D4ED8;
 
-    /* Shadows (Soft diffuse drop shadows, no 3D bevels) */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-    --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
-    --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+    /* Shadows with Subtle Soft Blue Ambient Glow */
+    --shadow-xs: 0 1px 2px 0 rgba(37, 99, 235, 0.04);
+    --shadow-sm: 0 2px 6px -1px rgba(37, 99, 235, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+    --shadow-card: 0 4px 18px -2px rgba(37, 99, 235, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+    --shadow-card-hover: 0 12px 26px -4px rgba(37, 99, 235, 0.14), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+    --shadow-modal: 0 24px 44px -8px rgba(37, 99, 235, 0.16), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
 
     /* Border Radiuses */
     --radius-sm: 6px;
@@ -73,6 +74,11 @@ body {
     font-size: 14px;
     line-height: 1.5;
     background-color: var(--bg-app);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.45) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(224, 242, 254, 0.4) 0px, transparent 45%),
+        radial-gradient(at 50% 100%, rgba(239, 246, 255, 0.5) 0px, transparent 55%);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100%;
     margin: 0;
@@ -83,7 +89,7 @@ body {
 
 /* Top App Window / Wrapper */
 .erp-window, .saas-app-wrapper {
-    background-color: var(--bg-app);
+    background: transparent;
     border: none;
     box-shadow: none;
     min-height: 100vh;
@@ -451,19 +457,22 @@ body {
 
 .erp-kpi-card, .saas-kpi-card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-card);
+    border: 1px solid var(--border-card-highlight);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .erp-kpi-card:hover, .saas-kpi-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-card-hover);
+    border-color: rgba(147, 197, 253, 0.85);
 }
 
 .erp-kpi-label {
@@ -565,8 +574,8 @@ body {
 .erp-content-pane, .saas-content-card {
     background-color: var(--bg-card);
     border-radius: var(--radius-xl);
-    border: 1px solid var(--border-card);
-    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-card-highlight);
+    box-shadow: 0 8px 30px -4px rgba(37, 99, 235, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.02);
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -613,7 +622,8 @@ body {
    ========================================================================== */
 .erp-table-container, .saas-table-container {
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 2px 8px -2px rgba(37, 99, 235, 0.04);
     overflow: auto;
     background-color: var(--bg-card);
     flex: 1;
@@ -660,7 +670,7 @@ body {
 }
 
 .erp-table tbody tr:hover {
-    background-color: #F8FAFC;
+    background-color: #F1F6FD;
 }
 
 .erp-table tbody tr:last-child td {
